@@ -32,9 +32,12 @@ class Profile(object):
 
     def add_preferences(self, pref):
         if type(pref) in [list, tuple]:
-            if len(pref) == 0:
+            if len(pref) == 0:    # XXX can be joined with if below
                 return
+
+            # XXX better use insinstance maybe?
             if type(pref[0]) is int:
+                # XXX this makes everything very confusing, why is this allowed?
                 # list of integers
                 self.preferences.append(DichotomousPreferences(pref))
             else:
@@ -54,6 +57,7 @@ class Profile(object):
             pref.is_valid(self.num_cand)
             self.preferences.append(pref)
         else:
+            # XXX add supported types to error message
             raise TypeError("Object of type " + str(type(pref)) +
                             " not suitable as preferences")
 
@@ -61,6 +65,7 @@ class Profile(object):
         return sum(pref.weight for pref in self.preferences)
 
     def has_unit_weights(self):
+        # XXX not important but nicer maybe: all(p.weight == 1 for p in self.preferences)
         for p in self.preferences:
             if p.weight != 1:
                 return False
@@ -87,6 +92,8 @@ class Profile(object):
         return output[:-2]
 
     def party_list(self):
+        # XXX a better name for this method would be "is_party_list", the docstring could be also
+        # better - I wasn't sure at first glance whether the first line is a TODO comment
         """
         Is this party a party-list profile?
         In a party-list profile all approval sets are either
@@ -142,6 +149,10 @@ class DichotomousPreferences:
     def __iter__(self):
         return iter(self.approved)
 
+    # XXX often it makes sense to name functions or methods "check_XY" if the it doesn't do
+    # anything than raising an exception if a check fails and "is_XY" if it doesn't do anything
+    # else except returning a boolean value. This is a combination of both which makes less
+    # sense. I'd suggest to rename it to "check_valid" and remove the "return true".
     def is_valid(self, num_cand):
         for c in self.approved:
             if c < 0 or c >= num_cand:

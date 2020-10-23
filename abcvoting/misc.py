@@ -6,6 +6,7 @@ Miscellaneous functions for committees (i.e., subsets of candidates)
 from __future__ import print_function
 
 
+# XXX this should be named sorted_committees, similar to sorted() and sort()
 def sort_committees(committees):
     """
     sorts a list of committees,
@@ -14,6 +15,8 @@ def sort_committees(committees):
     return [sorted(list(c)) for c in sorted(set(map(tuple, committees)))]
 
 
+# XXX a good naming convention for a function which does a check only and raises if the check
+# fails, is check_enough_approved_chandidates()
 def enough_approved_candidates(profile, committeesize):
     """
     verifies whether a sufficient number of approved candidates exists

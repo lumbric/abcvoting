@@ -14,6 +14,7 @@ from abcvoting.misc import hamming
 
 
 # returns score function given its name
+# XXX remove committeesize?
 def get_scorefct(scorefct_str, committeesize):
     if scorefct_str == 'pav':
         return __pav_score_fct
@@ -44,6 +45,8 @@ def thiele_score(scorefct_str, profile, committee):
     return score
 
 
+# XXX Why using two leading underscores? This is confusing, in classes this used for name mangeling!
+# https://docs.python.org/3/tutorial/classes.html#private-variables
 def __geom_score_fct(i, base):
     if i == 0:
         return 0

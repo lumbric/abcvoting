@@ -75,10 +75,12 @@ def __gurobi_thiele_methods(profile, committeesize,
         if maxscore is None:
             maxscore = m.objVal
 
+        # XXX avoid magic numbers - set 0.99 to a constant with a name!
         if abs(m.objVal - maxscore) > 1e-8:
             # no longer optimal
             break
 
+        # XXX avoid magic numbers - set 0.99 to a constant with a name!
         committees.append([c for c in cands if in_committee[c].Xn >= 0.99])
 
         if resolute:

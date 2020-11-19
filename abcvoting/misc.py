@@ -22,8 +22,11 @@ def enough_approved_candidates(profile, committeesize):
     for pref in profile:
         appr.update(pref)
     if len(appr) < committeesize:
-        raise ValueError("committeesize = " + str(committeesize)
-                         + " is larger than number of approved candidates")
+        raise ValueError(
+            "committeesize = "
+            + str(committeesize)
+            + " is larger than number of approved candidates"
+        )
 
 
 def str_candset(candset, names=None):
@@ -73,8 +76,7 @@ def str_committees_header(committees, winning=False):
 
 def hamming(a, b):
     """Hamming distance"""
-    diffs = ([x for x in a if x not in b] +
-             [x for x in b if x not in a])
+    diffs = [x for x in a if x not in b] + [x for x in b if x not in a]
     return len(diffs)
 
 

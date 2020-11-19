@@ -13,18 +13,24 @@ class Profile(object):
     """
     Preference profiles
     """
+
     def __init__(self, num_cand, names=None):
         if num_cand <= 0:
-            raise ValueError(str(num_cand) +
-                             " is not a valid number of candidates")
+            raise ValueError(str(num_cand) + " is not a valid number of candidates")
         self.num_cand = num_cand
         self.preferences = []
         self.names = [str(c) for c in range(num_cand)]
         if names:
             if len(names) < num_cand:
-                raise ValueError("names " + str(names) + " has length "
-                                 + str(len(names)) + " < num_cand ("
-                                 + str(num_cand) + ")")
+                raise ValueError(
+                    "names "
+                    + str(names)
+                    + " has length "
+                    + str(len(names))
+                    + " < num_cand ("
+                    + str(num_cand)
+                    + ")"
+                )
             self.names = [str(names[i]) for i in range(num_cand)]
 
     def __len__(self):
@@ -48,14 +54,14 @@ class Profile(object):
                         p.check_valid(self.num_cand)
                         self.preferences.append(p)
                     else:
-                        raise TypeError("Object of type " + str(type(p)) +
-                                        " not suitable as preferences")
+                        raise TypeError(
+                            "Object of type " + str(type(p)) + " not suitable as preferences"
+                        )
         elif isinstance(pref, DichotomousPreferences):
             pref.check_valid(self.num_cand)
             self.preferences.append(pref)
         else:
-            raise TypeError("Object of type " + str(type(pref)) +
-                            " not suitable as preferences")
+            raise TypeError("Object of type " + str(type(pref)) + " not suitable as preferences")
 
     def totalweight(self):
         return sum(pref.weight for pref in self.preferences)
@@ -74,16 +80,19 @@ class Profile(object):
 
     def __str__(self):
         if self.has_unit_weights():
-            output = ("profile with %d votes and %d candidates:\n"
-                      % (len(self.preferences), self.num_cand))
+            output = "profile with %d votes and %d candidates:\n" % (
+                len(self.preferences),
+                self.num_cand,
+            )
             for p in self.preferences:
                 output += " " + str_candset(p.approved, self.names) + ",\n"
         else:
-            output = ("weighted profile with %d votes and %d candidates:\n"
-                      % (len(self.preferences), self.num_cand))
+            output = "weighted profile with %d votes and %d candidates:\n" % (
+                len(self.preferences),
+                self.num_cand,
+            )
             for p in self.preferences:
-                output += (" " + str(p.weight) + " * "
-                           + str_candset(p.approved, self.names) + ",\n")
+                output += " " + str(p.weight) + " * " + str_candset(p.approved, self.names) + ",\n"
         return output[:-2]
 
     def party_list(self):
@@ -94,8 +103,7 @@ class Profile(object):
         """
         for pref1 in self.preferences:
             for pref2 in self.preferences:
-                if ((len(pref1.approved & pref2.approved)
-                     not in [0, len(pref1.approved)])):
+                if len(pref1.approved & pref2.approved) not in [0, len(pref1.approved)]:
                     return False
         return True
 
@@ -110,11 +118,14 @@ class Profile(object):
             output = ""
         else:
             output = "weighted "
-        output += ("profile with %d votes and %d candidates:\n"
-                   % (len(self.preferences), self.num_cand))
+        output += "profile with %d votes and %d candidates:\n" % (
+            len(self.preferences),
+            self.num_cand,
+        )
         for apprset in compact:
-            output += (" " + str(compact[apprset]) + " x "
-                       + str_candset(apprset, self.names) + ",\n")
+            output += (
+                " " + str(compact[apprset]) + " x " + str_candset(apprset, self.names) + ",\n"
+            )
         output = output[:-2]
         if not self.has_unit_weights():
             output += "\ntotal weight: " + str(self.totalweight())
@@ -145,5 +156,4 @@ class DichotomousPreferences:
     def check_valid(self, num_cand):
         for c in self.approved:
             if c < 0 or c >= num_cand:
-                raise ValueError(str(self) + " not valid for num_cand = " +
-                                 str(num_cand))
+                raise ValueError(str(self) + " not valid for num_cand = " + str(num_cand))

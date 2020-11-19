@@ -36,7 +36,7 @@ def load_preflib_files_from_dir(dir_name, setsize=1, appr_percent=None):
         Returns:
             profiles: list
                 a list of profiles (type Profile)
-        """
+    """
     file_dir, files = get_file_names(dir_name)
     files = [file_dir + f for f in files]
 
@@ -44,10 +44,13 @@ def load_preflib_files_from_dir(dir_name, setsize=1, appr_percent=None):
     if file_dir is not None:
         files = sorted(files)
         for f in files:
-            if ((f.endswith('.soi') or f.endswith('.toi')
-                 or f.endswith('.soc') or f.endswith('.toc'))):
-                profile = read_preflib_file(
-                    f, setsize=setsize, appr_percent=appr_percent)
+            if (
+                f.endswith(".soi")
+                or f.endswith(".toi")
+                or f.endswith(".soc")
+                or f.endswith(".toc")
+            ):
+                profile = read_preflib_file(f, setsize=setsize, appr_percent=appr_percent)
                 profiles.append(profile)
 
     return profiles
@@ -74,28 +77,24 @@ def get_appr_set(num_appr, ranking, candidate_map):
                 tied = True
                 rank = rank[1:]
             else:
-                raise PreflibException(
-                    "Invalid format for tied candidates: " + str(ranking))
+                raise PreflibException("Invalid format for tied candidates: " + str(ranking))
         if rank.endswith("}"):
             if tied:
                 tied = False
                 rank = rank[:-1]
             else:
-                raise PreflibException(
-                    "Invalid format for tied candidates: " + str(ranking))
+                raise PreflibException("Invalid format for tied candidates: " + str(ranking))
         rank = rank.strip()
         if len(rank) > 0:
             try:
                 c = int(rank)
             except ValueError:
-                raise PreflibException(
-                    "Expected candidate number but encountered " + str(c) + "")
+                raise PreflibException("Expected candidate number but encountered " + str(c) + "")
             appr_set.add(c)
         if len(appr_set) >= num_appr and not tied:
             break
     if tied:
-        raise PreflibException(
-            "Invalid format for tied candidates: " + str(ranking))
+        raise PreflibException("Invalid format for tied candidates: " + str(ranking))
     if len(appr_set) < num_appr:
         # all candidates approved
         appr_set = set(candidate_map.keys())
@@ -128,35 +127,36 @@ def read_preflib_file(filename, setsize=1, appr_percent=None):
             Preference profile extracted from preflib file,
             including names of candidates
 
-        """
+    """
     if setsize <= 0:
         raise ValueError("Parameter setsize <= 0")
-    if appr_percent and (appr_percent <= 0. or appr_percent > 1.):
-        raise ValueError(
-            "Parameter appr_percent not in interval (0, 1]")
+    if appr_percent and (appr_percent <= 0.0 or appr_percent > 1.0):
+        raise ValueError("Parameter appr_percent not in interval (0, 1]")
     with open(filename, "r") as f:
         line = f.readline()
         num_cand = int(line.strip())
         candidate_map = {}
         for _ in range(num_cand):
             parts = f.readline().strip().split(",")
-            candidate_map[int(parts[0].strip())] = \
-                ",".join(parts[1:]).strip()
+            candidate_map[int(parts[0].strip())] = ",".join(parts[1:]).strip()
 
         parts = f.readline().split(",")
         try:
             voter_count, _, unique_orders = [int(p.strip()) for p in parts]
         except ValueError:
-            raise PreflibException("Number of voters ill specified, "
-                                   + str(parts)
-                                   + " should be triple of integers")
+            raise PreflibException(
+                "Number of voters ill specified, " + str(parts) + " should be triple of integers"
+            )
 
         appr_sets = []
         lines = [line.strip() for line in f.readlines() if line.strip()]
         if len(lines) != unique_orders:
-            raise PreflibException("Number of unique orders should be "
-                                   + str(unique_orders) + " but is " +
-                                   str(len(lines)))
+            raise PreflibException(
+                "Number of unique orders should be "
+                + str(unique_orders)
+                + " but is "
+                + str(len(lines))
+            )
 
     for line in lines:
         parts = line.split(",")
@@ -165,8 +165,7 @@ def read_preflib_file(filename, setsize=1, appr_percent=None):
         try:
             count = int(parts[0])
         except ValueError:
-            raise PreflibException("Each ranking must start with count ("
-                                   + str(line) + ")")
+            raise PreflibException("Each ranking must start with count (" + str(line) + ")")
         ranking = parts[1:]  # ranking starts after count
         if len(ranking) == 0:
             raise PreflibException("Empty ranking: " + str(line))

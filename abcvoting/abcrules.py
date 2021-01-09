@@ -7,13 +7,14 @@ import sys
 import functools
 from itertools import combinations
 
+from abcvoting.cout import cout
+
 try:
     from gmpy2 import mpq as Fraction
 except ImportError:
-    print(
-        "Warning: module gmpy2 not found, " + "resorting to Python's fractions.Fraction"
-    )
+    cout.warning("Warning: module gmpy2 not found, resorting to Python's fractions.Fraction")
     from fractions import Fraction
+
 from abcvoting import abcrules_gurobi
 from abcvoting import abcrules_cvxpy
 from abcvoting.misc import sort_committees
@@ -286,10 +287,10 @@ def compute_thiele_method(
     scorefct = scores.get_scorefct(scorefct_str, committeesize)
 
     # optional output
-    if verbose:
-        print(header(rules[scorefct_str].longname))
-        if resolute:
-            print("Computing only one winning committee (resolute=True)\n")
+    cout.debug(header(rules[scorefct_str].longname))
+    if resolute:
+        cout.info("Computing only one winning committee (resolute=True)\n")
+
     if verbose >= 3:
         if algorithm == "gurobi":
             print("Using the Gurobi ILP solver\n")
@@ -345,9 +346,7 @@ def __thiele_methods_branchandbound(profile, committeesize, scorefct_str, resolu
     scorefct = scores.get_scorefct(scorefct_str, committeesize)
 
     best_committees = []
-    init_com = compute_seq_thiele_method(
-        profile, committeesize, scorefct_str, resolute=True
-    )[0]
+    init_com = compute_seq_thiele_method(profile, committeesize, scorefct_str, resolute=True)[0]
     best_score = scores.thiele_score(scorefct_str, profile, init_com)
     part_coms = [[]]
     while part_coms:
@@ -367,9 +366,7 @@ def __thiele_methods_branchandbound(profile, committeesize, scorefct_str, resolu
             else:
                 largest_cand = -1
             missing = committeesize - len(part_com)
-            marg_util_cand = scores.marginal_thiele_scores_add(
-                scorefct, profile, part_com
-            )
+            marg_util_cand = scores.marginal_thiele_scores_add(scorefct, profile, part_com)
             upper_bound = sum(
                 sorted(marg_util_cand[largest_cand + 1 :])[-missing:]
             ) + scores.thiele_score(scorefct_str, profile, part_com)
@@ -385,9 +382,7 @@ def __thiele_methods_branchandbound(profile, committeesize, scorefct_str, resolu
 
 
 # Sequential PAV
-def compute_seqpav(
-    profile, committeesize, algorithm="standard", resolute=True, verbose=0
-):
+def compute_seqpav(profile, committeesize, algorithm="standard", resolute=True, verbose=0):
     """Sequential PAV (seq-PAV)"""
     return compute_seq_thiele_method(
         profile,
@@ -399,9 +394,7 @@ def compute_seqpav(
     )
 
 
-def compute_seqslav(
-    profile, committeesize, algorithm="standard", resolute=True, verbose=0
-):
+def compute_seqslav(profile, committeesize, algorithm="standard", resolute=True, verbose=0):
     """Sequential Sainte-Lague Approval Voting (SLAV)"""
     return compute_seq_thiele_method(
         profile,
@@ -414,9 +407,7 @@ def compute_seqslav(
 
 
 # Reverse Sequential PAV
-def compute_revseqpav(
-    profile, committeesize, algorithm="standard", resolute=True, verbose=0
-):
+def compute_revseqpav(profile, committeesize, algorithm="standard", resolute=True, verbose=0):
     """Reverse sequential PAV (revseq-PAV)"""
     return compute_revseq_thiele_method(
         profile,
@@ -428,9 +419,7 @@ def compute_revseqpav(
     )
 
 
-def compute_seqcc(
-    profile, committeesize, algorithm="standard", resolute=True, verbose=0
-):
+def compute_seqcc(profile, committeesize, algorithm="standard", resolute=True, verbose=0):
     """Sequential Chamberlin-Courant (seq-CC)"""
     return compute_seq_thiele_method(
         profile,
@@ -442,16 +431,12 @@ def compute_seqcc(
     )
 
 
-def compute_sav(
-    profile, committeesize, algorithm="standard", resolute=False, verbose=0
-):
+def compute_sav(profile, committeesize, algorithm="standard", resolute=False, verbose=0):
     """Satisfaction Approval Voting (SAV)"""
     if algorithm == "standard":
         return __separable("sav", profile, committeesize, resolute, verbose)
     else:
-        raise NotImplementedError(
-            "Algorithm " + str(algorithm) + " not specified for compute_sav"
-        )
+        raise NotImplementedError("Algorithm " + str(algorithm) + " not specified for compute_sav")
 
 
 # Approval Voting (AV)
@@ -460,9 +445,7 @@ def compute_av(profile, committeesize, algorithm="standard", resolute=False, ver
     if algorithm == "standard":
         return __separable("av", profile, committeesize, resolute, verbose)
     else:
-        raise NotImplementedError(
-            "Algorithm " + str(algorithm) + " not specified for compute_av"
-        )
+        raise NotImplementedError("Algorithm " + str(algorithm) + " not specified for compute_av")
 
 
 def __separable(rule_id, profile, committeesize, resolute, verbose):
@@ -562,9 +545,7 @@ def __seq_thiele_resolute(profile, committeesize, scorefct_str, verbose):
 
     # build a committee starting with the empty set
     for _ in range(committeesize):
-        additional_score_cand = scores.marginal_thiele_scores_add(
-            scorefct, profile, committee
-        )
+        additional_score_cand = scores.marginal_thiele_scores_add(scorefct, profile, committee)
         next_cand = additional_score_cand.index(max(additional_score_cand))
         committee.append(next_cand)
         # optional output
@@ -579,10 +560,7 @@ def __seq_thiele_resolute(profile, committeesize, scorefct_str, verbose):
             tied_cands = [
                 c
                 for c in range(len(additional_score_cand))
-                if (
-                    c > next_cand
-                    and (additional_score_cand[c] == max(additional_score_cand))
-                )
+                if (c > next_cand and (additional_score_cand[c] == max(additional_score_cand)))
             ]
             if len(tied_cands) > 0:
                 output += " tie broken in favor of " + str(next_cand)
@@ -608,9 +586,7 @@ def __seq_thiele_irresolute(profile, committeesize, scorefct_str):
         comm_scores_next = {}
         for committee, score in comm_scores.items():
             # marginal utility gained by adding candidate to the committee
-            additional_score_cand = scores.marginal_thiele_scores_add(
-                scorefct, profile, committee
-            )
+            additional_score_cand = scores.marginal_thiele_scores_add(scorefct, profile, committee)
             for c in range(profile.num_cand):
                 if additional_score_cand[c] >= max(additional_score_cand):
                     next_comm = tuple(sorted(committee + (c,)))
@@ -628,9 +604,7 @@ def compute_seq_thiele_method(
 
     if algorithm != "standard":
         raise NotImplementedError(
-            "Algorithm "
-            + str(algorithm)
-            + " not specified for compute_seq_thiele_method"
+            "Algorithm " + str(algorithm) + " not specified for compute_seq_thiele_method"
         )
 
     # optional output
@@ -641,9 +615,7 @@ def compute_seq_thiele_method(
     # end of optional output
 
     if resolute:
-        committees = __seq_thiele_resolute(
-            profile, committeesize, scorefct_str, verbose=verbose
-        )
+        committees = __seq_thiele_resolute(profile, committeesize, scorefct_str, verbose=verbose)
     else:
         committees = __seq_thiele_irresolute(profile, committeesize, scorefct_str)
 
@@ -677,9 +649,7 @@ def __revseq_thiele_irresolute(profile, committeesize, scorefct_str):
     for _ in range(profile.num_cand - committeesize):
         comm_scores_next = {}
         for committee, score in comm_scores.items():
-            marg_util_cand = scores.marginal_thiele_scores_remove(
-                scorefct, profile, committee
-            )
+            marg_util_cand = scores.marginal_thiele_scores_remove(scorefct, profile, committee)
             score_reduction = min(marg_util_cand)
             # find smallest elements in marg_util_cand and return indices
             cands_to_remove = [
@@ -713,15 +683,11 @@ def __revseq_thiele_resolute(profile, committeesize, scorefct_str, verbose):
     # end of optional output
 
     for _ in range(profile.num_cand - committeesize):
-        marg_util_cand = scores.marginal_thiele_scores_remove(
-            scorefct, profile, committee
-        )
+        marg_util_cand = scores.marginal_thiele_scores_remove(scorefct, profile, committee)
         score_reduction = min(marg_util_cand)
         # find smallest elements in marg_util_cand and return indices
         cands_to_remove = [
-            cand
-            for cand in range(profile.num_cand)
-            if marg_util_cand[cand] == min(marg_util_cand)
+            cand for cand in range(profile.num_cand) if marg_util_cand[cand] == min(marg_util_cand)
         ]
         committee.remove(cands_to_remove[-1])
 
@@ -752,9 +718,7 @@ def compute_revseq_thiele_method(
 
     if algorithm != "standard":
         raise NotImplementedError(
-            "Algorithm "
-            + str(algorithm)
-            + " not specified for compute_revseq_thiele_method"
+            "Algorithm " + str(algorithm) + " not specified for compute_revseq_thiele_method"
         )
 
     # optional output
@@ -806,9 +770,7 @@ def __minimaxav_bruteforce(profile, committeesize):
 
 
 # Minimax Approval Voting
-def compute_mav(
-    profile, committeesize, algorithm="brute-force", resolute=False, verbose=0
-):
+def compute_mav(profile, committeesize, algorithm="brute-force", resolute=False, verbose=0):
     """Minimax AV (MAV)"""
     check_enough_approved_candidates(profile, committeesize)
 
@@ -825,18 +787,14 @@ def compute_mav(
     # end of optional output
 
     if algorithm == "gurobi":
-        committees = abcrules_gurobi.__gurobi_minimaxav(
-            profile, committeesize, resolute
-        )
+        committees = abcrules_gurobi.__gurobi_minimaxav(profile, committeesize, resolute)
         committees = sort_committees(committees)
     elif algorithm == "brute-force":
         committees = __minimaxav_bruteforce(profile, committeesize)
         if resolute:
             committees = [committees[0]]
     else:
-        raise NotImplementedError(
-            "Algorithm " + str(algorithm) + " not specified for compute_mav"
-        )
+        raise NotImplementedError("Algorithm " + str(algorithm) + " not specified for compute_mav")
 
     opt_mavscore = scores.mavscore(profile, committees[0])
 
@@ -857,9 +815,7 @@ def compute_mav(
 
 
 # Lexicographic Minimax Approval Voting
-def compute_lexmav(
-    profile, committeesize, algorithm="brute-force", resolute=False, verbose=0
-):
+def compute_lexmav(profile, committeesize, algorithm="brute-force", resolute=False, verbose=0):
     """Lexicographic Minimax AV"""
     check_enough_approved_candidates(profile, committeesize)
 
@@ -912,9 +868,7 @@ def compute_lexmav(
 
 
 # Proportional Approval Voting
-def compute_pav(
-    profile, committeesize, algorithm="branch-and-bound", resolute=False, verbose=0
-):
+def compute_pav(profile, committeesize, algorithm="branch-and-bound", resolute=False, verbose=0):
     """Proportional Approval Voting (PAV)"""
     return compute_thiele_method(
         "pav",
@@ -927,9 +881,7 @@ def compute_pav(
 
 
 # Sainte-Lague Approval Voting
-def compute_slav(
-    profile, committeesize, algorithm="branch-and-bound", resolute=False, verbose=0
-):
+def compute_slav(profile, committeesize, algorithm="branch-and-bound", resolute=False, verbose=0):
     """Sainte-Lague Approval Voting (SLAV)"""
     return compute_thiele_method(
         "slav",
@@ -942,9 +894,7 @@ def compute_slav(
 
 
 # Chamberlin-Courant
-def compute_cc(
-    profile, committeesize, algorithm="branch-and-bound", resolute=False, verbose=0
-):
+def compute_cc(profile, committeesize, algorithm="branch-and-bound", resolute=False, verbose=0):
     """Approval Chamberlin-Courant (CC)"""
     return compute_thiele_method(
         "cc",
@@ -956,9 +906,7 @@ def compute_cc(
     )
 
 
-def compute_monroe(
-    profile, committeesize, algorithm="brute-force", resolute=False, verbose=0
-):
+def compute_monroe(profile, committeesize, algorithm="brute-force", resolute=False, verbose=0):
     """Monroe's rule"""
     check_enough_approved_candidates(profile, committeesize)
 
@@ -991,11 +939,7 @@ def compute_monroe(
 
     # optional output
     if verbose:
-        print(
-            "Optimal Monroe score: "
-            + str(scores.monroescore(profile, committees[0]))
-            + "\n"
-        )
+        print("Optimal Monroe score: " + str(scores.monroescore(profile, committees[0])) + "\n")
 
         print(str_committees_header(committees, winning=True))
         print(str_candsets(committees, cand_names=profile.cand_names))
@@ -1024,21 +968,16 @@ def __monroe_bruteforce(profile, committeesize, resolute):
     return committees
 
 
-def compute_greedy_monroe(
-    profile, committeesize, algorithm="standard", resolute=True, verbose=0
-):
+def compute_greedy_monroe(profile, committeesize, algorithm="standard", resolute=True, verbose=0):
     """"Greedy Monroe"""
     check_enough_approved_candidates(profile, committeesize)
     if not profile.has_unit_weights():
         raise ValueError(
-            rules["greedy-monroe"].shortname
-            + " is only defined for unit weights (weight=1)"
+            rules["greedy-monroe"].shortname + " is only defined for unit weights (weight=1)"
         )
 
     if not resolute:
-        raise NotImplementedError(
-            "compute_greedy_monroe does not support resolute=False."
-        )
+        raise NotImplementedError("compute_greedy_monroe does not support resolute=False.")
 
     if algorithm != "standard":
         raise NotImplementedError(
@@ -1101,9 +1040,7 @@ def compute_greedy_monroe(
                 + "satisfaction is possible "
                 + "(without changing the committee)."
             )
-            print(
-                "Optimal Monroe score of the winning committee is " + str(score1) + "."
-            )
+            print("Optimal Monroe score of the winning committee is " + str(score1) + ".")
 
         # build actual Monroe assignment for winning committee
         for t, district in enumerate(assignment):
@@ -1291,9 +1228,7 @@ def compute_seqphragmen(
             profile, committeesize, division, verbose=verbose
         )
     else:
-        committees, comm_loads = __seqphragmen_irresolute(
-            profile, committeesize, division
-        )
+        committees, comm_loads = __seqphragmen_irresolute(profile, committeesize, division)
 
     # optional output
     if verbose:
@@ -1368,9 +1303,7 @@ def compute_rule_x(
             print("Computing only one winning committee (resolute=True)\n")
     # end of optional output
 
-    start_budget = {
-        v: division(committeesize, len(profile)) for v, _ in enumerate(profile)
-    }
+    start_budget = {v: division(committeesize, len(profile)) for v, _ in enumerate(profile)}
     cands = range(profile.num_cand)
     commbugdets = [(set(), start_budget)]
     final_committees = set()
@@ -1397,9 +1330,7 @@ def compute_rule_x(
                     min_q[c] = q
 
             if len(min_q) > 0:  # one or more candidates are affordable
-                next_cands = [
-                    c for c in min_q.keys() if min_q[c] == min(min_q.values())
-                ]
+                next_cands = [c for c in min_q.keys() if min_q[c] == min(min_q.values())]
                 for next_cand in next_cands:
                     new_budget = dict(budget)
                     for v, pref in enumerate(profile):
@@ -1449,9 +1380,7 @@ def compute_rule_x(
                     start_load = {}
                     # translate budget to loads
                     for v in range(len(profile)):
-                        start_load[v] = (
-                            division(committeesize, len(profile)) - budget[v]
-                        )
+                        start_load[v] = division(committeesize, len(profile)) - budget[v]
 
                     # optional output
                     if resolute and verbose >= 2:
@@ -1514,9 +1443,7 @@ def compute_rule_x_without_2nd_phase(
     )
 
 
-def compute_optphragmen(
-    profile, committeesize, algorithm="gurobi", resolute=False, verbose=0
-):
+def compute_optphragmen(profile, committeesize, algorithm="gurobi", resolute=False, verbose=0):
     """opt-Phragmen
 
     Warning: does not include the lexicographic optimization as specified
@@ -1571,8 +1498,7 @@ def compute_phragmen_enestroem(
     check_enough_approved_candidates(profile, committeesize)
     if not profile.has_unit_weights():
         raise ValueError(
-            rules["phrag-enestr"].shortname
-            + " is only defined for unit weights (weight=1)"
+            rules["phrag-enestr"].shortname + " is only defined for unit weights (weight=1)"
         )
 
     if algorithm == "standard":
@@ -1581,9 +1507,7 @@ def compute_phragmen_enestroem(
         division = Fraction  # using exact fractions
     else:
         raise NotImplementedError(
-            "Algorithm "
-            + str(algorithm)
-            + " not specified for compute_phragmen_enestroem"
+            "Algorithm " + str(algorithm) + " not specified for compute_phragmen_enestroem"
         )
 
     num_voters = len(profile)
@@ -1646,9 +1570,7 @@ def compute_phragmen_enestroem(
     return committees
 
 
-def compute_consensus_rule(
-    profile, committeesize, algorithm="standard", resolute=True, verbose=0
-):
+def compute_consensus_rule(profile, committeesize, algorithm="standard", resolute=True, verbose=0):
     """Consensus rule,
     based on Perpetual Consensus from
     Martin Lackner Perpetual Voting: Fairness in Long-Term Decision Making
